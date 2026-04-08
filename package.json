@@ -1,0 +1,22 @@
+{
+  "name": "lunch-bot",
+  "version": "2.0.0",
+  "description": "Bot de automatización para reserva de almuerzos en plataforma universitaria",
+  "type": "module",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "bot": "node src/bot.js",
+    "install:browsers": "npx playwright install chromium"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "playwright": "^1.44.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "keywords": ["automation", "playwright", "bot", "university", "lunch"],
+  "license": "MIT"
+}

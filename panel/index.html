@@ -1,0 +1,986 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Biofood Bot">
+  <meta name="theme-color" content="#059669">
+  <title>Bot Biofood UA</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <style>
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --green: #059669;
+      --green-dark: #047857;
+      --green-light: #d1fae5;
+      --green-text: #065f46;
+      --gray-bg: #f4f6f8;
+      --gray-border: #e5e7eb;
+      --gray-mid: #9ca3af;
+      --gray-text: #374151;
+      --text: #111827;
+      --white: #ffffff;
+      --safe-top: env(safe-area-inset-top, 0px);
+      --safe-bot: env(safe-area-inset-bottom, 0px);
+    }
+
+    html,
+    body {
+      height: 100%;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--gray-bg);
+      min-height: 100%;
+      display: flex;
+      flex-direction: column;
+      padding: calc(var(--safe-top) + 1rem) 1rem calc(var(--safe-bot) + 1rem);
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    /* ── App shell ── */
+    .app {
+      max-width: 480px;
+      width: 100%;
+      margin: 0 auto;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    /* ── Header ── */
+    .header {
+      background: var(--white);
+      border-radius: 16px;
+      border: 1px solid var(--gray-border);
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .logo {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: var(--green-light);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 15px;
+      color: var(--green-text);
+      flex-shrink: 0;
+    }
+
+    .header h1 {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .header p {
+      font-size: 12px;
+      color: var(--gray-mid);
+    }
+
+    .badge-online {
+      margin-left: auto;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 99px;
+      background: #fef3c7;
+      color: #92400e;
+      white-space: nowrap;
+      flex-shrink: 0;
+      transition: background .3s, color .3s;
+    }
+
+    .badge-online.online {
+      background: var(--green-light);
+      color: var(--green-text);
+    }
+
+    /* ── Card genérica ── */
+    .card {
+      background: var(--white);
+      border-radius: 16px;
+      border: 1px solid var(--gray-border);
+      padding: 16px;
+    }
+
+    /* ── Sección labels ── */
+    .slabel {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: .07em;
+      text-transform: uppercase;
+      color: var(--gray-mid);
+      margin-bottom: 10px;
+    }
+
+    /* ── Campos ── */
+    .fields {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .field label {
+      font-size: 13px;
+      color: var(--gray-text);
+      font-weight: 500;
+    }
+
+    .field input {
+      width: 100%;
+      padding: 11px 13px;
+      font-size: 15px;
+      border: 1px solid var(--gray-border);
+      border-radius: 10px;
+      background: var(--gray-bg);
+      color: var(--text);
+      -webkit-appearance: none;
+      appearance: none;
+      transition: border-color .15s, background .15s;
+    }
+
+    .field input:focus {
+      outline: none;
+      border-color: var(--green);
+      background: var(--white);
+    }
+
+    .row2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .show-pass {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 13px;
+      color: var(--gray-mid);
+      cursor: pointer;
+      padding: 2px 0;
+    }
+
+    /* ── Status ── */
+    .status {
+      border-radius: 12px;
+      padding: 14px;
+      border: 1px solid;
+      transition: all .3s;
+    }
+
+    .s-idle {
+      background: #f9fafb;
+      border-color: var(--gray-border);
+    }
+
+    .s-run {
+      background: #eff6ff;
+      border-color: #93c5fd;
+    }
+
+    .s-ok {
+      background: #f0fdf4;
+      border-color: #86efac;
+    }
+
+    .s-error {
+      background: #fef2f2;
+      border-color: #fca5a5;
+    }
+
+    .s-warn {
+      background: #fffbeb;
+      border-color: #fcd34d;
+    }
+
+    .slbl {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+
+    .s-idle .slbl {
+      color: #9ca3af;
+    }
+
+    .s-run .slbl {
+      color: #2563eb;
+    }
+
+    .s-ok .slbl {
+      color: #16a34a;
+    }
+
+    .s-error .slbl {
+      color: #dc2626;
+    }
+
+    .s-warn .slbl {
+      color: #b45309;
+    }
+
+    .smsg {
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .s-idle .smsg {
+      color: #6b7280;
+    }
+
+    .s-run .smsg {
+      color: #1d4ed8;
+    }
+
+    .s-ok .smsg {
+      color: #15803d;
+    }
+
+    .s-error .smsg {
+      color: #b91c1c;
+    }
+
+    .s-warn .smsg {
+      color: #92400e;
+    }
+
+    /* ── Métricas ── */
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+    }
+
+    .metric {
+      background: var(--gray-bg);
+      border-radius: 10px;
+      padding: 10px 6px;
+      text-align: center;
+    }
+
+    .metric-val {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .metric-lbl {
+      font-size: 10px;
+      color: var(--gray-mid);
+      margin-top: 2px;
+    }
+
+    .pill {
+      display: inline-block;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 99px;
+    }
+
+    .pg {
+      background: #dcfce7;
+      color: #166534;
+    }
+
+    .pb {
+      background: #dbeafe;
+      color: #1e40af;
+    }
+
+    .pn {
+      background: #f3f4f6;
+      color: #6b7280;
+    }
+
+    .pr {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+
+    .pa {
+      background: #fef3c7;
+      color: #92400e;
+    }
+
+    /* ── Log ── */
+    .log-box {
+      background: #0f172a;
+      border-radius: 10px;
+      padding: 10px 12px;
+      font-family: "Courier New", monospace;
+      font-size: 12px;
+      height: 140px;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .le {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 2px;
+      line-height: 1.6;
+    }
+
+    .lt {
+      color: #475569;
+      flex-shrink: 0;
+    }
+
+    .li {
+      color: #93c5fd;
+    }
+
+    .lo {
+      color: #86efac;
+    }
+
+    .le2 {
+      color: #fca5a5;
+    }
+
+    .lw {
+      color: #fde68a;
+    }
+
+    /* ── Botones ── */
+    .btn {
+      width: 100%;
+      padding: 14px;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      border: none;
+      transition: background .15s, transform .1s;
+      -webkit-appearance: none;
+      touch-action: manipulation;
+    }
+
+    .btn:active {
+      transform: scale(0.97);
+    }
+
+    .btn-green {
+      background: var(--green);
+      color: #fff;
+    }
+
+    .btn-green:hover:not(:disabled) {
+      background: var(--green-dark);
+    }
+
+    .btn-gray {
+      background: var(--gray-bg);
+      color: var(--gray-text);
+      border: 1px solid var(--gray-border);
+    }
+
+    .btn-gray:hover:not(:disabled) {
+      background: #eaecef;
+    }
+
+    .btn:disabled {
+      opacity: .4;
+      cursor: not-allowed;
+    }
+
+    .btn-row {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    /* ── Config ── */
+    .cfg-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 14px;
+      color: var(--gray-text);
+      padding: 4px 0;
+    }
+
+    .cfg-row input[type="number"] {
+      width: 76px;
+      padding: 7px 9px;
+      font-size: 14px;
+      text-align: right;
+      border: 1px solid var(--gray-border);
+      border-radius: 8px;
+      background: var(--gray-bg);
+      color: var(--text);
+      -webkit-appearance: none;
+    }
+
+    .toggle {
+      position: relative;
+      width: 42px;
+      height: 24px;
+      flex-shrink: 0;
+    }
+
+    .toggle input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .t-slider {
+      position: absolute;
+      cursor: pointer;
+      inset: 0;
+      background: #d1d5db;
+      border-radius: 24px;
+      transition: .2s;
+    }
+
+    .t-slider:before {
+      content: "";
+      position: absolute;
+      width: 18px;
+      height: 18px;
+      left: 3px;
+      top: 3px;
+      background: #fff;
+      border-radius: 50%;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, .2);
+      transition: .2s;
+    }
+
+    .toggle input:checked+.t-slider {
+      background: var(--green);
+    }
+
+    .toggle input:checked+.t-slider:before {
+      transform: translateX(18px);
+    }
+
+    /* ── Nota privacidad ── */
+    .privacy {
+      font-size: 12px;
+      color: var(--gray-mid);
+      background: var(--gray-bg);
+      border-radius: 10px;
+      padding: 10px 12px;
+      line-height: 1.6;
+    }
+
+    code {
+      font-size: 11px;
+      background: var(--gray-border);
+      padding: 1px 5px;
+      border-radius: 4px;
+    }
+
+    /* ── Divisor ── */
+    hr {
+      border: none;
+      border-top: 1px solid var(--gray-border);
+      margin: 4px 0;
+    }
+
+    /* ── Install banner (solo se muestra si hay prompt disponible) ── */
+    #installBanner {
+      display: none;
+      background: var(--green);
+      color: #fff;
+      border-radius: 12px;
+      padding: 12px 14px;
+      font-size: 14px;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      font-weight: 600;
+      touch-action: manipulation;
+    }
+
+    #installBanner.visible {
+      display: flex;
+    }
+
+    #installBanner span {
+      flex: 1;
+    }
+
+    #installBanner button {
+      background: rgba(255, 255, 255, .2);
+      border: none;
+      color: #fff;
+      font-size: 13px;
+      font-weight: 700;
+      padding: 6px 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      touch-action: manipulation;
+    }
+
+    #installBanner .close-btn {
+      background: transparent;
+      font-size: 18px;
+      padding: 0 4px;
+    }
+
+    /* Scrollbar en dark log */
+    .log-box::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    .log-box::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .log-box::-webkit-scrollbar-thumb {
+      background: #334155;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="app">
+
+    <!-- BANNER DE INSTALACIÓN PWA -->
+    <div id="installBanner">
+      <span>📲 Instalar como app en tu celular</span>
+      <button id="btnInstall">Instalar</button>
+      <button class="close-btn" id="btnCloseBanner">✕</button>
+    </div>
+
+    <!-- HEADER -->
+    <div class="header">
+      <div class="logo">BF</div>
+      <div>
+        <h1>Bot Biofood UA</h1>
+        <p>Universidad del Atlántico</p>
+      </div>
+      <div class="badge-online" id="badgeOnline">● desconectado</div>
+    </div>
+
+    <!-- SERVIDOR EN LA NUBE -->
+    <div class="card">
+      <div class="slabel">Servidor del bot</div>
+      <div class="fields">
+        <div class="field">
+          <label>URL del servidor (Railway / Render)</label>
+          <input type="url" id="inServer" placeholder="https://mi-bot.up.railway.app" autocomplete="off"
+            autocorrect="off" spellcheck="false">
+        </div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <button class="btn btn-gray" id="btnPing" onclick="pingServidor()"
+            style="padding:9px 14px;font-size:13px;width:auto">
+            Verificar conexión
+          </button>
+          <span id="pingResult" style="font-size:12px;color:var(--gray-mid)"></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- CREDENCIALES -->
+    <div class="card">
+      <div class="slabel">Credenciales de acceso</div>
+      <div class="fields">
+        <div class="field">
+          <label>Usuario</label>
+          <input type="text" id="inUser" placeholder="ej. 000123456" autocomplete="username" autocorrect="off"
+            autocapitalize="off">
+        </div>
+        <div class="field">
+          <label>Contraseña</label>
+          <input type="password" id="inPass" placeholder="••••••••" autocomplete="current-password">
+        </div>
+        <label class="show-pass">
+          <input type="checkbox" id="chkShow" onchange="togglePass()">
+          Mostrar contraseña
+        </label>
+      </div>
+    </div>
+
+    <!-- URLs -->
+    <div class="card">
+      <div class="slabel">URLs de la plataforma</div>
+      <div class="fields">
+        <div class="row2">
+          <div class="field">
+            <label>Login</label>
+            <input type="url" id="inLoginUrl" placeholder="https://…/login" autocorrect="off" spellcheck="false">
+          </div>
+          <div class="field">
+            <label>Reservas</label>
+            <input type="url" id="inReservasUrl" placeholder="https://…/reservas" autocorrect="off" spellcheck="false">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STATUS + MÉTRICAS -->
+    <div class="card" style="display:flex;flex-direction:column;gap:12px">
+      <div class="status s-idle" id="statusBox">
+        <div class="slbl" id="stLabel">en espera</div>
+        <div class="smsg" id="stMsg">Ingresa los datos y presiona "Iniciar bot".</div>
+      </div>
+
+      <div class="metrics">
+        <div class="metric">
+          <div class="metric-val" id="mIntentos">0</div>
+          <div class="metric-lbl">intentos</div>
+        </div>
+        <div class="metric">
+          <div class="metric-val" id="mRelogins">0</div>
+          <div class="metric-lbl">re-logins</div>
+        </div>
+        <div class="metric">
+          <div class="metric-val" id="mRestante">—</div>
+          <div class="metric-lbl">próximo</div>
+        </div>
+        <div class="metric">
+          <div class="metric-val" id="mEstado"><span class="pill pn">—</span></div>
+          <div class="metric-lbl">estado</div>
+        </div>
+      </div>
+
+      <div class="log-box" id="logArea">
+        <div class="le"><span class="lt">--:--:--</span><span class="li">Bot listo. Esperando inicio...</span></div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn btn-green" id="btnIniciar" onclick="iniciarBot()">🍽 Iniciar bot</button>
+        <button class="btn btn-gray" id="btnDetener" onclick="detenerBot()" disabled>Detener bot</button>
+      </div>
+    </div>
+
+    <!-- CONFIGURACIÓN -->
+    <div class="card" style="display:flex;flex-direction:column;gap:10px">
+      <div class="slabel" style="margin-bottom:2px">Configuración</div>
+      <div class="cfg-row">
+        <label>Intervalo de verificación (seg)</label>
+        <input type="number" id="cfgIntervalo" value="45" min="10" max="300">
+      </div>
+      <div class="cfg-row">
+        <label>Máximo de intentos</label>
+        <input type="number" id="cfgMaxIntentos" value="100" min="1" max="500">
+      </div>
+      <div class="cfg-row">
+        <label>Re-login automático al fallar</label>
+        <label class="toggle">
+          <input type="checkbox" id="cfgRelogin" checked>
+          <span class="t-slider"></span>
+        </label>
+      </div>
+      <div class="cfg-row">
+        <label>Notificaciones push</label>
+        <label class="toggle">
+          <input type="checkbox" id="cfgNotify" checked>
+          <span class="t-slider"></span>
+        </label>
+      </div>
+    </div>
+
+    <!-- PRIVACIDAD -->
+    <div class="privacy">
+      🔒 Tus credenciales se envían únicamente al servidor que tú mismo desplegaste.
+      No se almacenan en ninguna base de datos. La URL del servidor se guarda
+      localmente en tu dispositivo con <code>localStorage</code>.
+    </div>
+
+  </div><!-- /app -->
+
+  <script>
+    // ── Persistencia local ────────────────────────────────────────────────────────
+    const LS = {
+      save: (k, v) => { try { localStorage.setItem(k, v); } catch { } },
+      load: (k, d = '') => { try { return localStorage.getItem(k) || d; } catch { return d; } },
+    };
+
+    // Restaurar URL del servidor y URLs de plataforma al cargar
+    window.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('inServer').value = LS.load('serverUrl');
+      document.getElementById('inLoginUrl').value = LS.load('loginUrl');
+      document.getElementById('inReservasUrl').value = LS.load('reservasUrl');
+
+      // Auto-guardar cuando cambian
+      ['inServer', 'inLoginUrl', 'inReservasUrl'].forEach(id => {
+        const keys = { inServer: 'serverUrl', inLoginUrl: 'loginUrl', inReservasUrl: 'reservasUrl' };
+        document.getElementById(id).addEventListener('change', () => {
+          LS.save(keys[id], document.getElementById(id).value.trim());
+        });
+      });
+    });
+
+    // ── Estado del bot ────────────────────────────────────────────────────────────
+    let corriendo = false, timer = null, countdown = null;
+    let intentos = 0, relogins = 0, maxIntentos = 100, intervaloSeg = 45, segsRestantes = 0;
+
+    const ahora = () => new Date().toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+    function getServer() {
+      return document.getElementById('inServer').value.trim().replace(/\/$/, '');
+    }
+
+    function getPayload() {
+      return {
+        usuario: document.getElementById('inUser').value.trim(),
+        password: document.getElementById('inPass').value,
+        loginUrl: document.getElementById('inLoginUrl').value.trim(),
+        reservasUrl: document.getElementById('inReservasUrl').value.trim(),
+      };
+    }
+
+    // ── Ping al servidor ──────────────────────────────────────────────────────────
+    async function pingServidor() {
+      const url = getServer();
+      if (!url) { alert('Ingresa la URL del servidor primero.'); return; }
+      const el = document.getElementById('pingResult');
+      el.textContent = 'Verificando...';
+      el.style.color = 'var(--gray-mid)';
+      try {
+        const t0 = Date.now();
+        const r = await fetch(`${url}/ping`, { signal: AbortSignal.timeout(5000) });
+        if (r.ok) {
+          const ms = Date.now() - t0;
+          el.textContent = `✓ Conectado (${ms}ms)`;
+          el.style.color = '#059669';
+          setBadge(true);
+        } else {
+          throw new Error(`HTTP ${r.status}`);
+        }
+      } catch (e) {
+        el.textContent = `✗ Sin respuesta`;
+        el.style.color = '#dc2626';
+        setBadge(false);
+      }
+    }
+
+    function setBadge(online) {
+      const b = document.getElementById('badgeOnline');
+      b.textContent = online ? '● conectado' : '● desconectado';
+      b.className = 'badge-online' + (online ? ' online' : '');
+    }
+
+    // ── Logging ───────────────────────────────────────────────────────────────────
+    function log(msg, tipo = 'info') {
+      const area = document.getElementById('logArea');
+      const d = document.createElement('div');
+      d.className = 'le';
+      const cls = tipo === 'ok' ? 'lo' : tipo === 'err' ? 'le2' : tipo === 'warn' ? 'lw' : 'li';
+      d.innerHTML = `<span class="lt">${ahora()}</span><span class="${cls}">${msg}</span>`;
+      area.appendChild(d);
+      area.scrollTop = area.scrollHeight;
+    }
+
+    function setStatus(cls, label, msg) {
+      const b = document.getElementById('statusBox');
+      b.className = `status ${cls}`;
+      document.getElementById('stLabel').textContent = label;
+      document.getElementById('stMsg').textContent = msg;
+    }
+
+    const PILLS = {
+      disponible: '<span class="pill pg">disponible</span>',
+      ya_reservo: '<span class="pill pg">reservado ✓</span>',
+      agotado: '<span class="pill pr">agotado</span>',
+      fuera_horario: '<span class="pill pb">fuera horario</span>',
+      re_login: '<span class="pill pa">re-login</span>',
+    };
+    const setPill = e => document.getElementById('mEstado').innerHTML = PILLS[e] || '<span class="pill pn">—</span>';
+
+    function togglePass() {
+      document.getElementById('inPass').type = document.getElementById('chkShow').checked ? 'text' : 'password';
+    }
+
+    // ── Lógica del bot ────────────────────────────────────────────────────────────
+    function iniciarBot() {
+      if (corriendo) return;
+      const url = getServer();
+      if (!url) { alert('Ingresa la URL del servidor antes de iniciar.'); return; }
+      const u = document.getElementById('inUser').value.trim();
+      const p = document.getElementById('inPass').value;
+      if (!u || !p) { alert('Ingresa usuario y contraseña.'); return; }
+
+      corriendo = true;
+      intentos = 0;
+      relogins = 0;
+      maxIntentos = parseInt(document.getElementById('cfgMaxIntentos').value) || 100;
+      intervaloSeg = parseInt(document.getElementById('cfgIntervalo').value) || 45;
+      document.getElementById('btnIniciar').disabled = true;
+      document.getElementById('btnDetener').disabled = false;
+      document.getElementById('mRelogins').textContent = '0';
+      setStatus('s-run', 'ejecutando', 'Verificando disponibilidad en Biofood...');
+      log('Bot iniciado. Verificando...', 'info');
+      verificar();
+    }
+
+    function detenerBot() {
+      corriendo = false;
+      clearTimeout(timer); clearInterval(countdown);
+      document.getElementById('btnIniciar').disabled = false;
+      document.getElementById('btnDetener').disabled = true;
+      document.getElementById('mRestante').textContent = '—';
+      setStatus('s-idle', 'detenido', 'Bot detenido.');
+      log('Bot detenido por el usuario.', 'warn');
+      setBadge(false);
+    }
+
+    function programarSiguiente() {
+      if (!corriendo) return;
+      segsRestantes = intervaloSeg;
+      clearInterval(countdown);
+      countdown = setInterval(() => {
+        segsRestantes--;
+        document.getElementById('mRestante').textContent = segsRestantes + 's';
+        if (segsRestantes <= 0) clearInterval(countdown);
+      }, 1000);
+      timer = setTimeout(verificar, intervaloSeg * 1000);
+    }
+
+    async function apiCall(endpoint, method = 'POST') {
+      const url = getServer();
+      const r = await fetch(`${url}/${endpoint}`, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(getPayload()),
+        signal: AbortSignal.timeout(30000),
+      });
+      return r.json();
+    }
+
+    async function verificar() {
+      if (!corriendo) return;
+      intentos++;
+      document.getElementById('mIntentos').textContent = intentos;
+      log(`Intento #${intentos} — consultando estado...`, 'info');
+
+      let data;
+      try {
+        data = await apiCall('verificar');
+        setBadge(true);
+      } catch {
+        log('No se pudo conectar con el servidor. ¿Está desplegado?', 'err');
+        setStatus('s-error', 'sin conexión', 'Verifica que el servidor esté activo en Railway/Render.');
+        setBadge(false);
+        detenerBot(); return;
+      }
+
+      setPill(data.estado);
+
+      if (data.estado === 'ya_reservo') {
+        log(`Reserva ya activa. Código: ${data.codigo || '—'}`, 'ok');
+        setStatus('s-ok', 'ya reservado', `Almuerzo ya reservado. Código: ${data.codigo || '—'}`);
+        notificar('Ya tienes almuerzo reservado 🎉', `Código: ${data.codigo}`);
+        detenerBot(); return;
+      }
+
+      if (data.estado === 'disponible') {
+        log('¡Disponible! Enviando reserva...', 'ok');
+        setStatus('s-run', 'reservando', 'Cupo disponible. Enviando la reserva...');
+        try {
+          const res = await apiCall('reservar');
+          if (res.ok) {
+            log(`¡Reserva exitosa! Código: ${res.codigo}`, 'ok');
+            setStatus('s-ok', '¡reservado!', `Almuerzo reservado. Código: ${res.codigo}`);
+            setPill('ya_reservo');
+            notificar('¡Almuerzo reservado! 🍽', `Código: ${res.codigo}`);
+            detenerBot(); return;
+          } else {
+            log(`Error al reservar: ${res.error}`, 'err');
+          }
+        } catch (e) {
+          log(`Error de red al reservar: ${e}`, 'err');
+        }
+      }
+
+      // Re-login cuando agotado o fallo de reserva
+      if ((data.estado === 'agotado' || data.estado === 'disponible') &&
+        document.getElementById('cfgRelogin').checked) {
+        log('Ejecutando logout → re-login para refrescar sesión...', 'warn');
+        setPill('re_login');
+        setStatus('s-warn', 're-login', 'Cerrando sesión y volviendo a autenticar...');
+        try {
+          await apiCall('logout');
+          relogins++;
+          document.getElementById('mRelogins').textContent = relogins;
+          log(`Re-login #${relogins} completado.`, 'warn');
+        } catch (e) {
+          log(`Error en re-login: ${e}`, 'err');
+        }
+        setStatus('s-run', 'ejecutando', 'Sesión renovada. Continuando vigilancia...');
+      } else if (data.estado === 'agotado') {
+        log('Sin cupos. Reintentando...', 'warn');
+        setStatus('s-run', 'agotado', 'Sin cupos. Reintentando automáticamente...');
+      } else if (data.estado === 'fuera_horario') {
+        log('Fuera de horario. Esperando...', 'info');
+        setStatus('s-run', 'fuera de horario', 'Esperando apertura del horario de reservas...');
+      }
+
+      if (intentos >= maxIntentos) {
+        log(`Máximo de intentos (${maxIntentos}) alcanzado.`, 'err');
+        detenerBot(); return;
+      }
+      programarSiguiente();
+    }
+
+    function notificar(titulo, cuerpo) {
+      if (!document.getElementById('cfgNotify').checked) return;
+      if (Notification.permission === 'granted') new Notification(titulo, { body: cuerpo, icon: 'icons/icon-192.png' });
+    }
+    if (Notification.permission === 'default') Notification.requestPermission();
+
+    // ── Service Worker (PWA) ──────────────────────────────────────────────────────
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js').catch(() => { });
+    }
+
+    // ── Install prompt (Android Chrome) ──────────────────────────────────────────
+    let deferredPrompt = null;
+    window.addEventListener('beforeinstallprompt', e => {
+      e.preventDefault();
+      deferredPrompt = e;
+      document.getElementById('installBanner').classList.add('visible');
+    });
+
+    document.getElementById('btnInstall').addEventListener('click', async () => {
+      if (!deferredPrompt) return;
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      if (outcome === 'accepted') log('App instalada en el dispositivo ✓', 'ok');
+      deferredPrompt = null;
+      document.getElementById('installBanner').classList.remove('visible');
+    });
+
+    document.getElementById('btnCloseBanner').addEventListener('click', () => {
+      document.getElementById('installBanner').classList.remove('visible');
+    });
+  </script>
+</body>
+
+</html>
